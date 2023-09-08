@@ -1,0 +1,47 @@
+# Configure the AWS provider
+provider "aws" {
+  region = "us-east-1" # Change to your desired region
+}
+
+# Create a key pair for SSH access
+resource "aws_key_pair" "example_key" {
+  key_name   = "example-key" # Change to your desired key name
+  public_key = file("~/.ssh/id_rsa.pub") # Replace with the path to your public key file
+}
+
+# Create a security group
+resource "aws_security_group" "example_sg" {
+  name        = "example-sg" # Change to your desired security group name
+  description = "Example security group"
+  
+  # Define ingress rules for SSH and any other necessary ports
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Adjust the IP range for SSH access
+  }
+  
+  # Add more ingress rules as needed
+}
+
+# Create an EBS volume
+resource "aws_ebs_volume" "example_volume" {
+  availability_zone = "us-east-1a" # Change to your desired availability zone
+  size             = 10            # Change to your desired volume size (in GB)
+}
+
+# Create an EC2 instance
+resource "aws_instance" "example_instance" {
+  ami           = "ami-0c55b159cbfafe1f0" # Change to your desired AMI ID
+  instance_type = "t2.micro"              # Change to your desired instance type
+
+  key_name      = aws_key_pair.example_key.key_name
+  security_groups = [aws_security_group.example_sg.name]
+
+  # Attach the EBS volume to the instance
+  ebs_block_device {
+    device_name = "/dev/sdf" # Change to your desired device name
+    volume_id   = aws_ebs_volume.example_volume.id
+  }
+}
